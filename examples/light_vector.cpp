@@ -71,7 +71,7 @@ int main () {
 
     // at() is functionally the same:
     foo.push_back(5);
-    std::cout << "'foo' at index 1: " << foo[1] << "\n\n";
+    std::cout << "'foo' at index 1: " << foo.at(1) << "\n\n";
 
     // Utility
 
@@ -93,3 +93,4 @@ int main () {
 
     return 0;
 }
+
