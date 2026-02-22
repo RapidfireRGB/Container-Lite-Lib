@@ -30,8 +30,8 @@ int main () {
     std::cout << "'foo' back element: " << foo.back() << "\n";
 
     // insert() parameters:
-    // size_t pos   - Index position before which the element will be inserted
-    // T value      - Element to be inserted
+    // size_t index   - Index position before which the element will be inserted
+    // T element      - Element to be inserted
     // size_t count - Optional number of times to insert element. Defaults to 1.
     foo.insert(1, 20, 2);
     std::cout << "'foo' first after insertion: " << foo.front() << "\n";
@@ -43,7 +43,7 @@ int main () {
     foo.pop_back();
     std::cout << "'foo' back after removal: " << foo.back() << "\n";
 
-    // Decrement operator (-=) is functionally the same as pop_back():
+    // Decrement operator (-=) removes the first instance of a value:
     foo -= 10;
     std::cout << "'foo' back after decrement: " << foo.back() << "\n";
 
@@ -93,4 +93,5 @@ int main () {
 
     return 0;
 }
+
 
