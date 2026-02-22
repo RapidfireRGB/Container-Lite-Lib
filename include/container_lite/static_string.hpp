@@ -182,13 +182,16 @@ namespace container_lite {
             // If found, inner loop will check for matching remaining characters.
             // Inner loop will either break early upon failure, or return index position upon successful full pass.
             size_t position = 0;
+            size_t jump = 0;
             for (size_t i = index; i <= size_-1; i++) {
                 if (data_[i] == substr[0]) {
                     for (size_t j = 0; j <= substr.length()-1;) {
-                        if (data_[i] == substr[j]) {
+                        if (data_[i+jump] == substr[j]) {
                             j++;
+                            jump++;
                         } else {
                             position = 0;
+                            jump = 0;
                             break;
                         }
                         if (j == substr.length()-1) {

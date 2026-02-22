@@ -26,6 +26,7 @@ namespace container_lite {
             static_assert(capacity_ > 0, "Type is too large for light vector.\n");
         }
 
+        // Destructor calls public clear method
         ~light_vector() {
             clear();
         }
@@ -212,8 +213,12 @@ namespace container_lite {
             return data()[size_-1];
         }
 
+        [[nodiscard]] T& at(const size_t index) {
+            return data()[index];
+        }
+
         [[nodiscard]] bool empty() {
-            return data()[0] == nullptr;
+            return !data()[0];
         }
 
         [[nodiscard]] bool full() const {

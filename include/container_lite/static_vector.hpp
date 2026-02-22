@@ -60,6 +60,14 @@ namespace container_lite {
         [[nodiscard]] bool empty() {
             return data()[0] == nullptr;
         }
+
+        T& front() {
+            return data()[0];
+        }
+
+        T& back() {
+            return data()[size_-1];
+        }
     };
 
 }
