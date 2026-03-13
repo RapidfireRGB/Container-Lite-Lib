@@ -1,1 +1,1 @@
-A collection of lightweight C++ containers. Work in progress.
+A collection of lightweight C++ data structures. Work in progress.

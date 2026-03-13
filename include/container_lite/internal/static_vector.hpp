@@ -1,18 +1,17 @@
-#ifndef CONTAINER_LITE_LIB_LIGHT_VECTOR_HPP
-#define CONTAINER_LITE_LIB_LIGHT_VECTOR_HPP
+#ifndef CONTAINER_LITE_LIB_INTR_STATIC_VECTOR_HPP
+#define CONTAINER_LITE_LIB_INTR_STATIC_VECTOR_HPP
 #include <cstddef>
 #include <new>
+#include <algorithm>
 
 namespace container_lite {
-    // Small vector implementation which consumes up to 1kb of memory at a time, or specified byte limit
-    template <typename T, std::size_t MaxBytes=1024-sizeof(size_t)>
-    class light_vector {
+    template <typename T, std::size_t N>
+    class static_vector {
     private:
         size_t size_;
-        alignas(T) unsigned char buffer[MaxBytes];
-        static constexpr size_t capacity_ = MaxBytes / sizeof(T);
+        alignas(T) unsigned char buffer[N * sizeof(T)];
+        static constexpr size_t capacity_ = N;
 
-        // Returns const/non const pointer to stored elements
         T* data() {
             return reinterpret_cast<T*>(buffer);
         }
@@ -22,51 +21,21 @@ namespace container_lite {
         }
 
     public:
-        light_vector() : size_(0), buffer{} {
-            static_assert(capacity_ > 0, "Type is too large for light vector.\n");
+        static_vector() : size_(0), buffer{} {
+            static_assert(sizeof(static_vector) == sizeof(size_t) + N * sizeof(T),
+                          "Insufficient Memory for Static Vector.\n");
         }
 
-        // Destructor calls public clear method
-        ~light_vector() {
+        ~static_vector() {
             clear();
         }
 
-        /* Operator Overloading for:
-         * [] - Indexing
-         * =  - Copy Assignment
-         * += - Element Insertion
-         * -= - Element Erasure
-         * !  - NOT
-         * == - Equal To
-         * != - Not Equal
-         * <  - Less Than
-         * <= - Less Than/Equal To
-         * >  - Greater Than
-         * >= - Greater Than/Equal To
-         */
-
-        T& operator[](size_t index) {
+        T& operator[](const size_t index) {
             return data()[index];
         }
 
-        light_vector& operator=(const light_vector& other) {
-            // Early function exit if vectors are already equivalent
-            if (this == &other) {
-                return *this;
-            }
-
-            clear();
-
-            for (size_t i = 0; i <= other.size()-1; i++) {
-                new (&data()[i]) T(other.data()[i]);
-            }
-
-            size_ = other.size();
-            return *this;
-        }
-
         void operator+=(const T& element) {
-            if (size_ > capacity_) {
+            if (size_ == capacity_) {
                 return;
             }
             new (&data()[size_]) T(element);
@@ -84,7 +53,7 @@ namespace container_lite {
             return !data()[0];
         }
 
-        bool operator==(const light_vector& other) {
+        bool operator==(const static_vector& other) {
             if (size_ == 0 || size_ != other.size()) {
                 return false;
             }
@@ -96,7 +65,7 @@ namespace container_lite {
             return true;
         }
 
-        bool operator!=(const light_vector& other) {
+        bool operator!=(const static_vector& other) {
             if (size_ == 0 || other.size() == 0) {
                 return false;
             }
@@ -112,7 +81,7 @@ namespace container_lite {
             return true;
         }
 
-        bool operator<(const light_vector& other) {
+        bool operator<(const static_vector& other) {
             if (size_ == 0 || size_ > other.size()) {
                 return false;
             }
@@ -125,7 +94,7 @@ namespace container_lite {
             return true;
         }
 
-        bool operator<=(const light_vector& other) {
+        bool operator<=(const static_vector& other) {
             if (size_ == 0 || size_ > other.size()) {
                 return false;
             }
@@ -138,7 +107,7 @@ namespace container_lite {
             return true;
         }
 
-        bool operator>(const light_vector& other) {
+        bool operator>(const static_vector& other) {
             if (size_ == 0 || size_ <= other.size()) {
                 return false;
             }
@@ -150,7 +119,7 @@ namespace container_lite {
             return true;
         }
 
-        bool operator>=(const light_vector& other) {
+        bool operator>=(const static_vector& other) {
             if (size_ == 0 || size_ < other.size()) {
                 return false;
             }
@@ -163,7 +132,7 @@ namespace container_lite {
         }
 
         void push_back(const T& element) {
-            if (size_ >= capacity_) {
+            if (size_ == capacity_) {
                 return;
             }
             new (&data()[size_]) T(element);
@@ -171,22 +140,21 @@ namespace container_lite {
         }
 
         void pop_back() {
-            if (size_ > 0) {
-                size_--;
-                data()[size_].~T();
+            if (size_ == 0) {
+                return;
             }
+            size_--;
+            data()[size_].~T();
         }
 
         void insert(const size_t index, const T& element, const size_t count=1) {
             if (size_ + count > capacity_ || index > size_-1) {
                 return;
             }
-
             for (size_t i = 0; i > index; i--) {
                 new (&data()[i + count - 1]) T(std::move(data()[i-1]));
-                data()[i - 1].~T();
+                data()[i-1].~T();
             }
-
             for (size_t j = 0; j < count; j++) {
                 new (&data()[index-1]) T(element);
                 size_++;
@@ -197,7 +165,6 @@ namespace container_lite {
             if (index >= size_) {
                 return;
             }
-
             for (size_t i = 0; i < size_-1; i++) {
                 data()[i] = std::move(data()[i+1]);
             }
@@ -221,7 +188,7 @@ namespace container_lite {
             return !data()[0];
         }
 
-        [[nodiscard]] bool full() const {
+        [[nodiscard]] bool full() {
             return size_ == capacity_;
         }
 
@@ -264,7 +231,7 @@ namespace container_lite {
             return 0;
         }
 
-        void swap(const light_vector& other) {
+        void swap(const static_vector& other) {
             for (size_t i = 0; i <= other.size()-1; i++) {
                 std::swap(data()[i], other.data()[i]);
             }
@@ -275,8 +242,6 @@ namespace container_lite {
                 std::swap(data()[i], data()[size_-i]);
             }
         }
-
     };
 }
-
-#endif //CONTAINER_LITE_LIB_LIGHT_VECTOR_HPP
+#endif //CONTAINER_LITE_LIB_INTR_STATIC_VECTOR_HPP
